@@ -21,8 +21,19 @@ namespace FTPKey
     /// </summary>
     public enum EncryptionType
     {
+        /// <summary>
+        /// No encryption required
+        /// </summary>
         None = 0,
+
+        /// <summary>
+        /// Implicit encryption (SSL)
+        /// </summary>
         Implicit = 1,
+
+        /// <summary>
+        /// Explicit encryption (TLS)
+        /// </summary>
         Explicit = 2
     }
 
@@ -296,6 +307,9 @@ namespace FTPKey
         /// <returns></returns>
         private string _CleanRemoteFolder(string remoteFolderOld)
         {
+            if (string.IsNullOrEmpty(remoteFolderOld))
+                remoteFolderOld = "/";
+
             // Imposta il default
             string remoteFolderNew = string.Empty;
 
@@ -334,18 +348,59 @@ namespace FTPKey
         #endregion
 
         #region Constructor
+        /// <summary>
+        /// Create a new instance of the client and connects to the Ftp
+        /// </summary>
+        /// <param name="host">Ftp Url</param>
+        /// <param name="port">Ftp Port</param>
+        /// <param name="userName">The authentication's user name</param>
+        /// <param name="password">User password</param>
+        /// <param name="remoteFolder">The folder to whitch connect; if empty, the current folder will be the root path</param>
         public Client(string host, int port, string userName, string password, string remoteFolder)
             : this(host, port, userName, password, remoteFolder, ConnectionProtocol.Default)
         {
         }
+
+        /// <summary>
+        /// Create a new instance of the client and connects to the Ftp
+        /// </summary>
+        /// <param name="host">Ftp Url</param>
+        /// <param name="port">Ftp Port</param>
+        /// <param name="userName">The authentication's user name</param>
+        /// <param name="password">User password</param>
+        /// <param name="remoteFolder">The folder to whitch connect; if empty, the current folder will be the root path</param>
+        /// <param name="protocol">The required protocol to establish connection</param>
         public Client(string host, int port, string userName, string password, string remoteFolder, ConnectionProtocol protocol)
             : this(host, port, userName, password, remoteFolder, protocol, EncryptionType.None, string.Empty)
         {
         }
+
+        /// <summary>
+        /// Create a new instance of the client and connects to the Ftp
+        /// </summary>
+        /// <param name="host">Ftp Url</param>
+        /// <param name="port">Ftp Port</param>
+        /// <param name="userName">The authentication's user name</param>
+        /// <param name="password">User password</param>
+        /// <param name="remoteFolder">The folder to whitch connect; if empty, the current folder will be the root path</param>
+        /// <param name="protocol">The required protocol to establish connection</param>
+        /// <param name="encryptionType">Specify what type of encryption is needed; Explicit equals to TLS, Implicit equals to SSL</param>
         public Client(string host, int port, string userName, string password, string remoteFolder, ConnectionProtocol protocol, EncryptionType encryptionType)
             : this(host, port, userName, password, remoteFolder, protocol, encryptionType, string.Empty)
         {
         }
+
+        /// <summary>
+        /// Create a new instance of the client and connects to the Ftp
+        /// </summary>
+        /// <param name="host">Ftp Url</param>
+        /// <param name="port">Ftp Port</param>
+        /// <param name="userName">The authentication's user name</param>
+        /// <param name="password">User password</param>
+        /// <param name="remoteFolder">The folder to whitch connect; if empty, the current folder will be the root path</param>
+        /// <param name="protocol">The required protocol to establish connection</param>
+        /// <param name="encryptionType">Specify what type of encryption is needed; Explicit equals to TLS, Implicit equals to SSL</param>
+        /// <param name="fingerPrint">Fingerprint to validate connection (for SFTP only)</param>
         public Client(string host, int port, string userName, string password, string remoteFolder, ConnectionProtocol protocol, EncryptionType encryptionType, string fingerPrint)
         {
             switch (protocol)
