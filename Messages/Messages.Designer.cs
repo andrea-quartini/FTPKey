@@ -19,7 +19,7 @@ namespace FTPKey.Messages {
     // tramite uno strumento quale ResGen o Visual Studio.
     // Per aggiungere o rimuovere un membro, modificare il file con estensione ResX ed eseguire nuovamente ResGen
     // con l'opzione /str oppure ricompilare il progetto VS.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Messages {
@@ -183,6 +183,15 @@ namespace FTPKey.Messages {
         internal static string OperationUpload {
             get {
                 return ResourceManager.GetString("OperationUpload", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Cerca una stringa localizzata simile a Lo stream di destinazione non può essere null.
+        /// </summary>
+        internal static string OutStreamNullExceptionMessage {
+            get {
+                return ResourceManager.GetString("OutStreamNullExceptionMessage", resourceCulture);
             }
         }
         

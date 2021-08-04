@@ -93,6 +93,24 @@ namespace FTPKey
         }
 
         /// <summary>
+        /// Downloads a file from Ftp area
+        /// </summary>
+        /// <param name="remoteFileName">The name of file to download</param>
+        /// <param name="outStream">The output stream of downloaded file</param>
+        /// <param name="deleteFileAfterDownload">If true, it deletes the remote file after downloading it</param>
+        public bool DownloadFile(string remoteFileName, Stream outStream, bool deleteFileAfterDownload)
+        {
+            if (outStream != null)
+            {
+                return this._client.DownloadFile(remoteFileName, outStream, deleteFileAfterDownload);
+            }
+            else
+            {
+                throw new ArgumentNullException(Messages.Messages.PathNotFoundExceptionMessage);
+            }
+        }
+
+        /// <summary>
         /// Download di una lista di file dalla cartella di lavoro remota tramite pattern di ricerca
         /// </summary>
         /// <param name="fileNameSearchPattern">Pattern di ricerca</param>
@@ -140,6 +158,16 @@ namespace FTPKey
             // Controlla se il file va eliminato dopo l'upload
             if (deleteFileAfterUpload)
                 File.Delete(localFile);
+        }
+
+        /// <summary>
+        /// Uploads a file to the Ftp area
+        /// </summary>
+        /// <param name="localFileStream">The local file stream</param>
+        /// <param name="destinationFileName">Destination file name</param>
+        public void UploadFile(Stream localFileStream, string destinationFileName)
+        {
+            _client.UploadFile(localFileStream, destinationFileName);
         }
 
         /// <summary>

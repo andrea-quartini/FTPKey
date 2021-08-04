@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set di attributi. Modificare i valori di questi attributi per modificare le informazioni
 // associate a un assembly.
 [assembly: AssemblyTitle("FTPKey")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Simple wrapper library for accessing Ftp or Sftp areas")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("andrea quartini")]
 [assembly: AssemblyProduct("FTPKey")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]

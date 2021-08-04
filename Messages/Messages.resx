@@ -159,6 +159,9 @@
   <data name="OperationUpload" xml:space="preserve">
     <value>Upload</value>
   </data>
+  <data name="OutStreamNullExceptionMessage" xml:space="preserve">
+    <value>Lo stream di destinazione non può essere null</value>
+  </data>
   <data name="PathNotFoundExceptionMessage" xml:space="preserve">
     <value>Errore durante l'operazione {0}, non è stato trovato il percorso {1}</value>
   </data>
