@@ -310,14 +310,21 @@ namespace FTPKey.BaseClient
         }
 
         /// <summary>
-        /// Creates a new remote folder
+        /// Creates a new remote folder; it creates all the missing folders into the path, recursively (for instance /fold1/fold2)
         /// </summary>
         /// <param name="path">The partial or full path to create</param>
         public void CreateFolder(string path)
         {
             try
             {
-                this._client.CreateDirectory(path);
+                string[] splittedPath = path.Split(new string[] { "/" }, StringSplitOptions.RemoveEmptyEntries).ToArray();
+                path = "/";
+                for (int index = 0; index < splittedPath.Length; index++)
+                {
+                    path += $"/{splittedPath[index]}";
+                    if (!_client.Exists(path))
+                        this._client.CreateDirectory(path);
+                }
             }
             catch (Renci.SshNet.Common.SshConnectionException ex)
             {
@@ -439,6 +446,26 @@ namespace FTPKey.BaseClient
         public string GetCurrentFolder()
         {
             return this._client.WorkingDirectory;
+        }
+
+        /// <summary>
+        /// Check if a file exists into the current folder or into a relative path beginning with the current folder
+        /// </summary>
+        /// <param name="filePath">The relative or full path of the file</param>
+        /// <returns></returns>
+        public bool FileExists(string filePath)
+        {
+            return _client.Exists(filePath);
+        }
+
+        /// <summary>
+        /// Check if the given folder exists
+        /// </summary>
+        /// <param name="folder">Relative or full path of the folder</param>
+        /// <returns></returns>
+        public bool FolderExists(string folder)
+        {
+            return _client.Exists(folder);
         }
         #endregion
 
