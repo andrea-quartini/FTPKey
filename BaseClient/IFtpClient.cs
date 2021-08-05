@@ -89,10 +89,11 @@ namespace FTPKey.BaseClient
         /// </summary>
         /// <param name="path">The partial or full path to create</param>
         void CreateFolder(string path);
-        
+
         /// <summary>
         /// Deletes a remote folder, not recursively
         /// </summary>
+        /// <param name="path">The folder to delete</param>
         void DeleteFolder(string path);
 
         /// <summary>

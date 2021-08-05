@@ -64,21 +64,16 @@ namespace FTPKey
         /// <returns></returns>
         public void DeleteFiles(string fileNameSearchPattern)
         {
-            // Recupera l'elenco dei file nella cartella di lavoro
             string[] files = this.GetFilesList();
 
-            // Verifica che l'elenco sia valido
             if (files != null)
             {
                 if (!string.IsNullOrEmpty(fileNameSearchPattern))
                 {
-                    // Recupera il pattern formattato per utilizzare le regex
                     string regExPattern = this._RegExPattern(fileNameSearchPattern);
 
-                    // Cicla sui file
                     foreach (string file in files)
                     {
-                        // Verifica se il nome del file corrisponde al pattern di ricerca ed eventualmente lo aggiunge alla lista
                         if (System.Text.RegularExpressions.Regex.IsMatch(file.ToUpper(), regExPattern))
                             this.DeleteFile(file);
                     }
@@ -87,18 +82,15 @@ namespace FTPKey
         }
 
         /// <summary>
-        /// Download di un file dalla cartella di lavoro remota
+        /// Downloads a file from Ftp area
         /// </summary>
-        /// <param name="remoteFileName">Nome del file da scaricare</param>
-        /// <param name="destinationFile">Percorso completo del file di destinazione</param>
-        /// <param name="deleteFileAfterDownload">Indica se il file vada cancellato dalla cartella di lavoro remota dopo il download</param>
-        /// <returns></returns>
+        /// <param name="remoteFileName">The name of file to download</param>
+        /// <param name="destinationFile">The destination local path</param>
+        /// <param name="deleteFileAfterDownload">If true, it deletes the remote file after downloading it</param>
         public void DownloadFile(string fileName, string destinationFile, bool deleteFileAfterDownload)
         {
-            // Chiama il metodo della classe base
             this._client.DownloadFile(fileName, destinationFile, deleteFileAfterDownload);
 
-            // Controlla se il file va cancellato dopo il download
             if (deleteFileAfterDownload)
                 this._client.DeleteFile(fileName);
         }
@@ -122,25 +114,21 @@ namespace FTPKey
         }
 
         /// <summary>
-        /// Download di una lista di file dalla cartella di lavoro remota tramite pattern di ricerca
+        /// Downloads a list of files given the search pattern
         /// </summary>
-        /// <param name="fileNameSearchPattern">Pattern di ricerca</param>
-        /// <param name="destinationPath">Percorso completo di destinazione dei file</param>
-        /// <param name="deleteFileAfterDownload">Indica se i file vadano cancellati dalla cartella di lavoro remota dopo il download</param>
+        /// <param name="fileNameSearchPattern">Search pattern</param>
+        /// <param name="destinationPath">Files destination path</param>
+        /// <param name="deleteFileAfterDownload">If true, remote files will be deleted after downloading them</param>
         /// <returns></returns>
         public void DownloadFiles(string fileNameSearchPattern, string destinationPath, bool deleteFileAfterDownload)
         {
             if (Directory.Exists(destinationPath))
             {
-                // Recupera l'elenco dei file nella cartella di lavoro
                 string[] files = this.GetFilesList(fileNameSearchPattern);
 
-                // Verifica che l'elenco sia valido
                 if (files != null)
                 {
-                    // Cicla sui file
                     foreach (string file in files)
-                        // Esegue il download
                         this.DownloadFile(file, Path.Combine(destinationPath, file), deleteFileAfterDownload);
                 }
             }
@@ -149,24 +137,20 @@ namespace FTPKey
         }
 
         /// <summary>
-        /// Upload di un file nella cartella di lavoro remota
+        /// Uploads a file to the Ftp area
         /// </summary>
-        /// <param name="localFile">Percorso completo del file da caricare</param>
-        /// <param name="destinationFileName">Nome del file di destinazione</param>
-        /// <param name="deleteFileAfterUpload">Indica se il file caricato vada cancellato dopo l'upload</param>
-        /// <returns></returns>
+        /// <param name="localFile">Full local file path</param>
+        /// <param name="destinationFileName">Destination file name</param>
+        /// <param name="deleteFileAfterUpload">If true, it deletes the local file after uploading it</param>
         public void UploadFile(string localFile, string destinationFileName, bool deleteFileAfterUpload)
         {
-            // Controlla che il file locale esista
             if (File.Exists(localFile))
             {
-                // Chiama il metodo della classe base
                 this._client.UploadFile(localFile, destinationFileName, deleteFileAfterUpload);
             }
             else
                 throw new FileNotFoundException(string.Format(Messages.Messages.UploadFileNotFoundExceptionMessage, localFile));
 
-            // Controlla se il file va eliminato dopo l'upload
             if (deleteFileAfterUpload)
                 File.Delete(localFile);
         }
@@ -182,51 +166,40 @@ namespace FTPKey
         }
 
         /// <summary>
-        /// Recupera l'elenco dei file presenti nella cartella di lavoro remota
+        /// Gets a list of filenames from the current remote folder
         /// </summary>
-        /// <returns>Lista dei file presenti</returns>
         public string[] GetFilesList()
         {
             return this._client.GetFilesList();
         }
 
         /// <summary>
-        /// Recupera l'elenco dei file presenti nella cartella di lavoro remota filtrandoli tramite pattern di ricerca
+        /// Gets a list of files from the desired path
         /// </summary>
-        /// <param name="pattern">Pattern di ricerca</param>
-        /// <returns></returns>
+        /// <param name="path">The path from witch retrieve the files list</param>
         public string[] GetFilesList(string pattern)
         {
-            // Recupera l'elenco dei file nella cartella di lavoro
             string[] files = this.GetFilesList();
 
-            // Verifica che l'elenco sia valido
             if (files != null)
             {
                 if (!string.IsNullOrEmpty(pattern))
                 {
-                    // Recupera il pattern formattato per utilizzare le regex
                     string regExPattern = this._RegExPattern(pattern);
-
-                    // Prepara una lista per filtrare i file
                     List<string> filteredFiles = new List<string>();
 
-                    // Cicla sui file
                     foreach (string file in files)
                     {
-                        // Verifica se il nome del file corrisponde al pattern di ricerca ed eventualmente lo aggiunge alla lista
                         if (System.Text.RegularExpressions.Regex.IsMatch(file.ToUpper(), regExPattern))
                             filteredFiles.Add(file);
                     }
 
-                    // Ritorna la lista filtrata
                     if (filteredFiles.Count > 0)
                         return filteredFiles.ToArray();
                     else
                         return null;
                 }
                 else
-                    // Ritorna la lista non filtrata
                     return files;
             }
             else
@@ -234,65 +207,63 @@ namespace FTPKey
         }
 
         /// <summary>
-        /// Recupera l'elenco delle sotto-directory presenti nella cartella di lavoro remota
+        /// Gets a list of sub-folders from the current remote folder
         /// </summary>
-        /// <returns>Lista delle sotto-directory presenti</returns>
         public string[] GetFoldersList()
         {
             return this._client.GetFoldersList();
         }
-        
+
         /// <summary>
-        /// Rinomina un file nella cartella di lavoro remota
+        /// Renames a remote file
         /// </summary>
-        /// <param name="currentName">Nome del file remoto da rinominare</param>
-        /// <param name="newName">Nuovo nome da assegnare al file remoto</param>
+        /// <param name="currentName">the current remote file's name</param>
+        /// <param name="newName">The new name</param>
         public void RenameFile(string currentName, string newName)
         {
             this._client.RenameFile(currentName, newName);
         }
 
         /// <summary>
-        /// Crea una nuova cartella
+        /// Creates a new remote folder
         /// </summary>
-        /// <param name="path">Percorso completo o relativo alla cartella di lavoro</param>
+        /// <param name="path">The partial or full path to create</param>
         public void CreateFolder(string path)
         {
             this._client.CreateFolder(path);
         }
 
         /// <summary>
-        /// Cancella una cartella
+        /// Deletes a remote folder, not recursively
         /// </summary>
-        /// <param name="path">Percorso completo o relativo alla cartella di lavoro</param>
+        /// <param name="path">The folder to delete</param>
         public void DeleteFolder(string path)
         {
             this._client.DeleteFolder(path);
         }
 
         /// <summary>
-        /// Cancella una cartella
+        /// Deletes a remote folder
         /// </summary>
-        /// <param name="path">Percorso completo o relativo alla cartella di lavoro</param>
-        /// <param name="deleteRecursively">Indica se eseguire la cancellazione ricorsivamente nel caso la cartella non sia vuota</param>
+        /// <param name="path">The folder to delete</param>
+        /// <param name="deleteRecursively">If true, a recursive deletion will be performed</param>
         public void DeleteFolder(string path, bool deleteRecursively)
         {
             this._client.DeleteFolder(path, deleteRecursively);
         }
 
         /// <summary>
-        /// Imposta la cartella di lavoro corrente
+        /// Sets the current folder
         /// </summary>
-        /// <param name="newFolder">Percorso completo della nuova cartella di lavoro</param>
+        /// <param name="newFolder">The new relative or full path</param>
         public void SetCurrentFolder(string newFolder)
         {
             this._client.SetCurrentFolder(this._CleanRemoteFolder(newFolder));
         }
 
         /// <summary>
-        /// Restituisce l'attuale cartella di lavoro
+        /// Gets the current folder's path
         /// </summary>
-        /// <returns></returns>
         public string GetCurrentFolder()
         {
             return this._client.GetCurrentFolder();
@@ -301,38 +272,37 @@ namespace FTPKey
 
         #region Private Methods
         /// <summary>
-        /// Metodo per la pulizia e normalizzazione della cartella di lavoro remota
+        /// Remote folder name normalization
         /// </summary>
-        /// <param name="remoteFolderOld"></param>
+        /// <param name="remoteFolderOld">The original remote folder name</param>
         /// <returns></returns>
         private string _CleanRemoteFolder(string remoteFolderOld)
         {
             if (string.IsNullOrEmpty(remoteFolderOld))
                 remoteFolderOld = "/";
 
-            // Imposta il default
+            // Sets the default
             string remoteFolderNew = string.Empty;
 
-            // Splitta il percorso
+            // Path splitted by '/' character
             string[] remoteFolderSplitted = remoteFolderOld.Replace("\\", "/").Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
 
-            // Ricompone il percorso senza eventuali parti vuote ed eliminando gli spazi
+            // Re-joins the path deleting white spaces
             foreach (string subPath in remoteFolderSplitted)
             {
                 if (!string.IsNullOrWhiteSpace(subPath))
                     remoteFolderNew += $"{(!string.IsNullOrEmpty(remoteFolderNew) ? "/" : string.Empty)}{subPath.Trim()}";
             }
 
-            // Il percorso deve iniziare almeno con lo '/'
+            // The path must start at least with '/'
             if (!remoteFolderNew.StartsWith("/") && !remoteFolderNew.StartsWith("./") && !remoteFolderNew.StartsWith("../"))
                 remoteFolderNew = string.Format("/{0}", remoteFolderNew);
 
-            // Valore di ritorno
             return remoteFolderNew;
         }
 
         /// <summary>
-        /// Restituisce un pattern formattato per le regex
+        /// Formats a regex-ready pattern 
         /// </summary>
         /// <param name="pattern"></param>
         /// <returns></returns>
@@ -433,7 +403,6 @@ namespace FTPKey
                 {
                 }
 
-                // Distrugge il client
                 if (this._client != null)
                 {
                     this._client.Disconnect();
@@ -451,7 +420,7 @@ namespace FTPKey
         }
 
         /// <summary>
-        /// Distruttore
+        /// Destructor
         /// </summary>
         ~Client()
         {
