@@ -20,7 +20,7 @@ using (FTPKey.Client client = new FTPKey.Client("127.0.0.1", 21, "username", "pa
 ```
 **SFTP**
 ```C#
-using (FTPKey.Client client = new FTPKey.Client("127.0.0.1", 22, "username", "password", "remotefolder", FTPKey.ConnectionProtocol.Sftp, FTPKey.EncryptionType.Imlicit))
+using (FTPKey.Client client = new FTPKey.Client("127.0.0.1", 22, "username", "password", "remotefolder", FTPKey.ConnectionProtocol.Sftp, FTPKey.EncryptionType.Implicit))
 {
     ...
 }
