@@ -2,7 +2,7 @@
 FTPKey is a simple wrapper library that relays on other two packages, [FluentFTP](https://github.com/robinrodricks/FluentFTP) and [SSH.NET](https://github.com/sshnet/SSH.NET); its aim is to provide Ftp, Ftps and Sftp access within a single package, simplifying some logics and adding some functionalities to both packages.
 
 ## Usage
-The `Client` class implements IDisposable interface, connection is provided by calling constructor, while disconnection by **Dispose** method, so you can wrap it into a **Using** clause and connection/disconnection will be automatically performed;
+The `Client` class implements IDisposable interface, connection is provided by calling constructor, while disconnection is by calling **Dispose** method, so you can wrap it into a **Using** clause and connection/disconnection will be automatically performed;
 
 **FTP**
 ```C#
