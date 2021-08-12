@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <Version>1.0.4</Version>
+    <TargetFrameworks>net40;net45;net472;net48;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1;net50;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <Version>1.0.4.1</Version>
     <Authors>Andrea Quartini</Authors>
     <Company />
     <Description>Simple wrapper library for accessing Ftp or Sftp areas</Description>
@@ -10,6 +10,7 @@
     <PackageProjectUrl>https://github.com/andrea-quartini/FTPKey/</PackageProjectUrl>
     <PackageTags>ftp,sftp,ssh,ftp-client,ssl,tls</PackageTags>
     <Copyright>MIT License</Copyright>
+    <PackageReleaseNotes>Compatibility with multiple target frameworks</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
