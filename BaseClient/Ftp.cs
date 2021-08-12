@@ -8,15 +8,11 @@ using FluentFTP;
 namespace FTPKey.BaseClient
 {
     /// <summary>
-    /// Gestione collegamento via FTP/FTPS
+    /// Handles connection with FTP or FTPS protocols
     /// </summary>
     internal class FtpClient : IFtpClient
     {
         #region Constants
-        /// <summary>
-        /// Numero di tentativi di download/upload di un file prima di interrompere l'operazione
-        /// The number of attempts at downloading or uploading a file
-        /// </summary>
         private const int RETRY_ATTEMPTS_NUMBER = 3;
         #endregion
 

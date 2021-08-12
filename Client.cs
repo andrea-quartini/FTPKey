@@ -10,9 +10,24 @@ namespace FTPKey
     /// </summary>
     public enum ConnectionProtocol
     {
+        /// <summary>
+        /// By default, the protocol is Ftp
+        /// </summary>
         Default = 0,
+
+        /// <summary>
+        /// Ftp protocol
+        /// </summary>
         Ftp = 1,
+
+        /// <summary>
+        /// Ftp with SSL
+        /// </summary>
         Ftps = 2,
+
+        /// <summary>
+        ///  Sftp protocol
+        /// </summary>
         Sftp = 3
     }
 
@@ -84,7 +99,7 @@ namespace FTPKey
         /// <summary>
         /// Downloads a file from Ftp area
         /// </summary>
-        /// <param name="remoteFileName">The name of file to download</param>
+        /// <param name="fileName">The name of file to download</param>
         /// <param name="destinationFile">The destination local path</param>
         /// <param name="deleteFileAfterDownload">If true, it deletes the remote file after downloading it</param>
         public void DownloadFile(string fileName, string destinationFile, bool deleteFileAfterDownload)
@@ -176,7 +191,7 @@ namespace FTPKey
         /// <summary>
         /// Gets a list of files from the desired path
         /// </summary>
-        /// <param name="path">The path from witch retrieve the files list</param>
+        /// <param name="pattern">A research pattern to retrieve specific files; if empty, all files will be retrieved</param>
         public string[] GetFilesList(string pattern)
         {
             string[] files = this.GetFilesList();
@@ -415,6 +430,10 @@ namespace FTPKey
         #region IDisposable
         private bool isDisposed = false;
 
+        /// <summary>
+        /// Executes disconnection and destroys the object
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             if (!isDisposed)
@@ -433,6 +452,10 @@ namespace FTPKey
                 isDisposed = true;
             }
         }
+
+        /// <summary>
+        /// Executes disconnection and destroys the object
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);

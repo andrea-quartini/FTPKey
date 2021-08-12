@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net40;net45;net472;net48;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1;net50;netstandard2.0;netstandard2.1</TargetFrameworks>
@@ -12,6 +12,14 @@
     <Copyright>MIT License</Copyright>
     <PackageReleaseNotes>Compatibility with multiple target frameworks</PackageReleaseNotes>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFrameworks)|$(Platform)'=='Release|net40;net45;net472;net48;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1;net50;netstandard2.0;netstandard2.1|AnyCPU'">
+    <DocumentationFile>D:\Sviluppo\GIT\FTPKey\FTPKey.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="FTPKey.xml" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentFTP" Version="34.0.2" />
