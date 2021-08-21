@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace FTPKey
+namespace FTPKey.BaseClient
 {
     /// <summary>
     /// Ftp connection handler
@@ -32,7 +32,7 @@ namespace FTPKey
         /// Deletes the desired remote file
         /// </summary>
         /// <param name="remoteFileName">The file to delete</param>
-        void DeleteFile(string remoteFileName);
+        bool DeleteFile(string remoteFileName);
 
         /// <summary>
         /// Downloads a file from Ftp area
@@ -56,14 +56,14 @@ namespace FTPKey
         /// <param name="localFile">Full local file path</param>
         /// <param name="destinationFileName">Destination file name</param>
         /// <param name="deleteFileAfterUpload">If true, it deletes the local file after uploading it</param>
-        void UploadFile(string localFile, string destinationFileName, bool deleteFileAfterUpload);
+        bool UploadFile(string localFile, string destinationFileName, bool deleteFileAfterUpload);
 
         /// <summary>
         /// Uploads a file to the Ftp area
         /// </summary>
         /// <param name="localFileStream">The local file stream</param>
         /// <param name="destinationFileName">Destination file name</param>
-        void UploadFile(Stream localFileStream, string destinationFileName);
+        bool UploadFile(Stream localFileStream, string destinationFileName);
         
         /// <summary>
         /// Gets a list of filenames from the current remote folder
@@ -92,26 +92,26 @@ namespace FTPKey
         /// </summary>
         /// <param name="currentName">the current remote file's name</param>
         /// <param name="newName">The new name</param>
-        void RenameFile(string currentName, string newName);
+        bool RenameFile(string currentName, string newName);
         
         /// <summary>
         /// Creates a new remote folder; it creates all the missing folders into the path, recursively (for instance /fold1/fold2)
         /// </summary>
         /// <param name="path">The partial or full path to create</param>
-        void CreateFolder(string path);
+        bool CreateFolder(string path);
 
         /// <summary>
         /// Deletes a remote folder, not recursively
         /// </summary>
         /// <param name="path">The folder to delete</param>
-        void DeleteFolder(string path);
+        bool DeleteFolder(string path);
 
         /// <summary>
         /// Deletes a remote folder
         /// </summary>
         /// <param name="path">The folder to delete</param>
         /// <param name="deleteRecursively">If true, a recursive deletion will be performed</param>
-        void DeleteFolder(string path, bool deleteRecursively);
+        bool DeleteFolder(string path, bool deleteRecursively);
         
         /// <summary>
         /// Sets the current folder

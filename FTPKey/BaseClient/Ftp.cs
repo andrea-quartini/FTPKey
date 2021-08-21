@@ -21,7 +21,7 @@ namespace FTPKey.BaseClient
         #endregion
 
         #region Properties
-        public bool IsConnected => _client.IsConnected && _client.IsAuthenticated;
+        public bool IsConnected => (_client?.IsConnected ?? false) && (_client?.IsAuthenticated ?? false);
         #endregion
 
         #region Connection Methods
@@ -32,8 +32,8 @@ namespace FTPKey.BaseClient
         {
             try
             {
-                if (!this._client.IsConnected)
-                    this._client.Connect();
+                if (!_client.IsConnected)
+                    _client.Connect();
             }
             catch (FluentFTP.FtpException ex)
             {
@@ -46,8 +46,8 @@ namespace FTPKey.BaseClient
         /// </summary>
         public void Disconnect()
         {
-            if (this._client.IsConnected)
-                this._client.Disconnect();
+            if (_client.IsConnected)
+                _client.Disconnect();
         }
         #endregion
 
@@ -56,16 +56,18 @@ namespace FTPKey.BaseClient
         /// Deletes the desired remote file
         /// </summary>
         /// <param name="remoteFileName">The file to delete</param>
-        public void DeleteFile(string remoteFileName)
+        public bool DeleteFile(string remoteFileName)
         {
             try
             {
-                this._client.DeleteFile(remoteFileName);
+                _client.DeleteFile(remoteFileName);
             }
             catch (FluentFTP.FtpException ex)
             {
                 throw new Exception(string.Format(Messages.Messages.GenericException, Messages.Messages.OperationDelete, (ex.InnerException != null ? ex.InnerException.Message : ex.Message)), ex);
             }
+
+            return !FileExists(remoteFileName);
         }
 
         /// <summary>
@@ -120,8 +122,8 @@ namespace FTPKey.BaseClient
 
             try
             {
-                this._client.Download(outStream, remoteFileName);
-                remoteFileSize = this._client.GetFileSize(remoteFileName);
+                _client.Download(outStream, remoteFileName);
+                remoteFileSize = _client.GetFileSize(remoteFileName);
             }
             catch (FluentFTP.FtpException ex)
             {
@@ -151,33 +153,34 @@ namespace FTPKey.BaseClient
         /// <param name="localFile">Full local file path</param>
         /// <param name="destinationFileName">Destination file name</param>
         /// <param name="deleteFileAfterUpload">If true, it deletes the local file after uploading it</param>
-        public void UploadFile(string localFile, string destinationFileName, bool deleteFileAfterUpload)
+        public bool UploadFile(string localFile, string destinationFileName, bool deleteFileAfterUpload)
         {
             long remoteFileLength = 0;
 
             try
             {
-                this._client.UploadFile(localFile, destinationFileName, FtpRemoteExists.Overwrite, false, FtpVerify.Retry | FtpVerify.Delete | FtpVerify.Throw);
+                FtpStatus status = _client.UploadFile(localFile, destinationFileName, FtpRemoteExists.Overwrite, false, FtpVerify.Retry | FtpVerify.Delete | FtpVerify.Throw);
 
-                if (this._client.FileExists(destinationFileName))
-                    remoteFileLength = this._client.GetFileSize(destinationFileName);
+                if (status == FtpStatus.Success && _client.FileExists(destinationFileName))
+                    remoteFileLength = _client.GetFileSize(destinationFileName);
                 else
-                    throw new FileNotFoundException(string.Format(Messages.Messages.OperationNotCompletedException, Messages.Messages.OperationUpload, destinationFileName));
+                    return false;
 
                 if (remoteFileLength != (new FileInfo(localFile)).Length)
                 {
-                    this._client.DeleteFile(destinationFileName);
-                    throw new Exception(string.Format(Messages.Messages.OperationNotCompletedException, Messages.Messages.OperationUpload, destinationFileName));
+                    _client.DeleteFile(destinationFileName);
+                    return false;
                 }
+                return true;
             }
             catch (FluentFTP.FtpException ex)
             {
                 throw new Exception(string.Format(Messages.Messages.GenericException, Messages.Messages.OperationUpload, (ex.InnerException != null ? ex.InnerException.Message : ex.Message)), ex);
             }
         }
-        public void UploadFile(string localFile, bool deleteFileAfterUpload)
+        public bool UploadFile(string localFile, bool deleteFileAfterUpload)
         {
-            this.UploadFile(localFile, Path.GetFileName(localFile), deleteFileAfterUpload);
+            return UploadFile(localFile, Path.GetFileName(localFile), deleteFileAfterUpload);
         }
 
         /// <summary>
@@ -185,24 +188,25 @@ namespace FTPKey.BaseClient
         /// </summary>
         /// <param name="localFileStream">The local file stream</param>
         /// <param name="destinationFileName">Destination file name</param>
-        public void UploadFile(Stream localFileStream, string destinationFileName)
+        public bool UploadFile(Stream localFileStream, string destinationFileName)
         {
             long remoteFileLength = 0;
 
             try
             {
-                this._client.Upload(localFileStream, destinationFileName, FtpRemoteExists.Overwrite, false);
+                FtpStatus status = _client.Upload(localFileStream, destinationFileName, FtpRemoteExists.Overwrite, false);
 
-                if (this._client.FileExists(destinationFileName))
-                    remoteFileLength = this._client.GetFileSize(destinationFileName);
+                if (status == FtpStatus.Success && _client.FileExists(destinationFileName))
+                    remoteFileLength = _client.GetFileSize(destinationFileName);
                 else
-                    throw new FileNotFoundException(string.Format(Messages.Messages.OperationNotCompletedException, Messages.Messages.OperationUpload, destinationFileName));
+                    return false;
 
                 if (remoteFileLength != localFileStream.Length)
                 {
-                    this._client.DeleteFile(destinationFileName);
-                    throw new Exception(string.Format(Messages.Messages.OperationNotCompletedException, Messages.Messages.OperationUpload, destinationFileName));
+                    _client.DeleteFile(destinationFileName);
+                    return false;
                 }
+                return true;
             }
             catch (FluentFTP.FtpException ex)
             {
@@ -215,7 +219,7 @@ namespace FTPKey.BaseClient
         /// </summary>
         public string[] GetFilesList()
         {
-            return this.GetFilesList(this.GetCurrentFolder());
+            return GetFilesList(GetCurrentFolder());
         }
 
         /// <summary>
@@ -229,7 +233,7 @@ namespace FTPKey.BaseClient
 
             try
             {
-                ftpFilesList = this._client.GetListing(path).ToList();
+                ftpFilesList = _client.GetListing(path).ToList();
             }
             catch (FluentFTP.FtpException ex)
             {
@@ -248,7 +252,7 @@ namespace FTPKey.BaseClient
         /// </summary>
         public string[] GetFoldersList()
         {
-            return this.GetFoldersList(this.GetCurrentFolder());
+            return GetFoldersList(this.GetCurrentFolder());
         }
 
         /// <summary>
@@ -262,7 +266,7 @@ namespace FTPKey.BaseClient
 
             try
             {
-                ftpFoldersList = this._client.GetListing(path).ToList();
+                ftpFoldersList = _client.GetListing(path).ToList();
             }
             catch (FluentFTP.FtpException ex)
             {
@@ -280,11 +284,12 @@ namespace FTPKey.BaseClient
         /// </summary>
         /// <param name="currentName">the current remote file's name</param>
         /// <param name="newName">The new name</param>
-        public void RenameFile(string currentName, string newName)
+        public bool RenameFile(string currentName, string newName)
         {
             try
             {
-                this._client.Rename(currentName, newName);
+                _client.Rename(currentName, newName);
+                return _client.FileExists(newName);
             }
             catch (FluentFTP.FtpException ex)
             {
@@ -296,11 +301,11 @@ namespace FTPKey.BaseClient
         /// Creates a new remote folder; it creates all the missing folders into the path, recursively (for instance /fold1/fold2)
         /// </summary>
         /// <param name="path">The partial or full path to create</param>
-        public void CreateFolder(string path)
+        public bool CreateFolder(string path)
         {
             try
             {
-                this._client.CreateDirectory(path, true);
+                return _client.CreateDirectory(path, true);
             }
             catch (FluentFTP.FtpException ex)
             {
@@ -311,16 +316,18 @@ namespace FTPKey.BaseClient
         /// <summary>
         /// Deletes a remote folder, not recursively
         /// </summary>
-        public void DeleteFolder(string path)
+        public bool DeleteFolder(string path)
         {
             try
             {
-                List<FtpListItem> items = this._client.GetListing(path).Where(x => x.Type == FtpFileSystemObjectType.Directory).ToList();
+                List<FtpListItem> items = _client.GetListing(path).Where(x => x.Type == FtpFileSystemObjectType.Directory).ToList();
 
                 if (items.Count == 0)
-                    this._client.DeleteDirectory(path);
+                    _client.DeleteDirectory(path);
                 else
                     throw new Exception(string.Format(Messages.Messages.DeleteFolderNotEmpty, path));
+
+                return !_client.DirectoryExists(path);
             }
             catch (FluentFTP.FtpException ex)
             {
@@ -333,24 +340,24 @@ namespace FTPKey.BaseClient
         /// </summary>
         /// <param name="path">The folder to delete</param>
         /// <param name="deleteRecursively">If true, a recursive deletion will be performed</param>
-        public void DeleteFolder(string path, bool deleteRecursively)
+        public bool DeleteFolder(string path, bool deleteRecursively)
         {
             if (deleteRecursively)
             {
                 try
                 {
-                    List<FtpListItem> items = this._client.GetListing(path).Where(x => x.Type == FtpFileSystemObjectType.Directory).ToList();
+                    List<FtpListItem> items = _client.GetListing(path).Where(x => x.Type == FtpFileSystemObjectType.Directory).ToList();
 
                     if (items.Count == 0)
-                        this._client.DeleteDirectory(path);
+                        _client.DeleteDirectory(path);
                     else
                     {
                         foreach (FtpListItem item in items.Where(x => x.Type == FtpFileSystemObjectType.Directory))
                         {
-                            this.DeleteFolder(item.FullName, deleteRecursively);
+                            DeleteFolder(item.FullName, deleteRecursively);
                         }
 
-                        this._client.DeleteDirectory(path);
+                        _client.DeleteDirectory(path);
                     }
                 }
                 catch (FluentFTP.FtpException ex)
@@ -360,8 +367,10 @@ namespace FTPKey.BaseClient
             }
             else
             {
-                this.DeleteFolder(path);
+                DeleteFolder(path);
             }
+
+            return !_client.DirectoryExists(path);
         }
 
         /// <summary>
@@ -370,8 +379,8 @@ namespace FTPKey.BaseClient
         /// <param name="newFolder">The new relative or full path</param>
         public void SetCurrentFolder(string newFolder)
         {
-            if (this._client.DirectoryExists(newFolder))
-                this._client.SetWorkingDirectory(newFolder);
+            if (_client.DirectoryExists(newFolder))
+                _client.SetWorkingDirectory(newFolder);
             else
                 throw new DirectoryNotFoundException(string.Format(Messages.Messages.PathNotFoundExceptionMessage, Messages.Messages.OperationChangeDirectory, newFolder));
         }
@@ -381,7 +390,7 @@ namespace FTPKey.BaseClient
         /// </summary>
         public string GetCurrentFolder()
         {
-            return this._client.GetWorkingDirectory();
+            return _client.GetWorkingDirectory();
         }
 
         /// <summary>
@@ -438,23 +447,23 @@ namespace FTPKey.BaseClient
             // Access credentials's set
             NetworkCredential credentials = new NetworkCredential(userName, password);
 
-            this._client = new FluentFTP.FtpClient(host, port, credentials);
-            this._client.EncryptionMode = encryption;
-            this._client.RetryAttempts = RETRY_ATTEMPTS_NUMBER;
+            _client = new FluentFTP.FtpClient(host, port, credentials);
+            _client.EncryptionMode = encryption;
+            _client.RetryAttempts = RETRY_ATTEMPTS_NUMBER;
 
             // SSL's certificate validation call back
             if (useSsl)
-                this._client.ValidateCertificate += _Client_ValidateCertificate;
+                _client.ValidateCertificate += _Client_ValidateCertificate;
         }
         #endregion
 
         #region IDisposable
         public void Dispose()
         {
-            if (this._client != null)
+            if (_client != null)
             {
-                this._client.Dispose();
-                this._client = null;
+                _client.Dispose();
+                _client = null;
             }
         }
         #endregion

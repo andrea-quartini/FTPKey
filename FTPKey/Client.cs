@@ -2,20 +2,70 @@
 using System.IO;
 using System.Collections.Generic;
 using FTPKey.BaseClient;
+using FTPKey.Exceptions;
 
-namespace FTPKey.BaseClient
+namespace FTPKey
 {
+    #region Public Enums
+    /// <summary>
+    /// Protocol used for connection
+    /// </summary>
+    public enum ConnectionProtocol
+    {
+        /// <summary>
+        /// By default, the protocol is Ftp
+        /// </summary>
+        Default = 0,
+
+        /// <summary>
+        /// Ftp protocol
+        /// </summary>
+        Ftp = 1,
+
+        /// <summary>
+        /// Ftp with SSL
+        /// </summary>
+        Ftps = 2,
+
+        /// <summary>
+        ///  Sftp protocol
+        /// </summary>
+        Sftp = 3
+    }
+
+    /// <summary>
+    /// Encryption method
+    /// </summary>
+    public enum EncryptionType
+    {
+        /// <summary>
+        /// No encryption required
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// Implicit encryption (SSL)
+        /// </summary>
+        Implicit = 1,
+
+        /// <summary>
+        /// Explicit encryption (TLS)
+        /// </summary>
+        Explicit = 2
+    }
+    #endregion
+
     /// <summary>
     /// Ftp connection handler
     /// </summary>
-    internal class Client : IFtpClient, IDisposable
+    public class Client : IDisposable
     {
         #region Variables
         private IFtpClient _client;
         #endregion
 
         #region Properties
-        public bool IsConnected => _client.IsConnected;
+        public bool IsConnected => _client?.IsConnected ?? false;
         #endregion
 
         #region Connection methods
@@ -37,12 +87,12 @@ namespace FTPKey.BaseClient
         /// </summary>
         /// <param name="fileName">The file to delete</param>
         /// <returns></returns>
-        public void DeleteFile(string fileName)
+        public bool DeleteFile(string fileName)
         {
             if (IsConnected)
-                this._client.DeleteFile(fileName);
+                return _client.DeleteFile(fileName);
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
@@ -52,18 +102,18 @@ namespace FTPKey.BaseClient
         /// <returns></returns>
         public void DeleteFiles(string fileNameSearchPattern)
         {
-            string[] files = this.GetFilesList();
+            string[] files = GetFilesList();
 
             if (files != null)
             {
                 if (!string.IsNullOrEmpty(fileNameSearchPattern))
                 {
-                    string regExPattern = this._RegExPattern(fileNameSearchPattern);
+                    string regExPattern = _RegExPattern(fileNameSearchPattern);
 
                     foreach (string file in files)
                     {
                         if (System.Text.RegularExpressions.Regex.IsMatch(file.ToUpper(), regExPattern))
-                            this.DeleteFile(file);
+                            DeleteFile(file);
                     }
                 }
             }
@@ -79,12 +129,12 @@ namespace FTPKey.BaseClient
         {
             bool result;
             if (IsConnected)
-                result =  this._client.DownloadFile(fileName, destinationFile, deleteFileAfterDownload);
+                result =  _client.DownloadFile(fileName, destinationFile, deleteFileAfterDownload);
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
 
             if (deleteFileAfterDownload && result)
-                this._client.DeleteFile(fileName);
+                _client.DeleteFile(fileName);
 
             return result;
         }
@@ -100,9 +150,9 @@ namespace FTPKey.BaseClient
             if (outStream != null)
             {
                 if (IsConnected)
-                    return this._client.DownloadFile(remoteFileName, outStream, deleteFileAfterDownload);
+                    return _client.DownloadFile(remoteFileName, outStream, deleteFileAfterDownload);
                 else
-                    throw new Exception(Messages.Messages.ClientDisconnected);
+                    throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
             }
             else
             {
@@ -123,19 +173,19 @@ namespace FTPKey.BaseClient
             {
                 if (Directory.Exists(destinationPath))
                 {
-                    string[] files = this.GetFilesList(fileNameSearchPattern);
+                    string[] files = GetFilesList(fileNameSearchPattern);
 
                     if (files != null)
                     {
                         foreach (string file in files)
-                            this.DownloadFile(file, Path.Combine(destinationPath, file), deleteFileAfterDownload);
+                            DownloadFile(file, Path.Combine(destinationPath, file), deleteFileAfterDownload);
                     }
                 }
                 else
                     throw new DirectoryNotFoundException(string.Format(Messages.Messages.PathNotFoundExceptionMessage, Messages.Messages.OperationDownload, destinationPath));
             }
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
@@ -144,22 +194,25 @@ namespace FTPKey.BaseClient
         /// <param name="localFile">Full local file path</param>
         /// <param name="destinationFileName">Destination file name</param>
         /// <param name="deleteFileAfterUpload">If true, it deletes the local file after uploading it</param>
-        public void UploadFile(string localFile, string destinationFileName, bool deleteFileAfterUpload)
+        public bool UploadFile(string localFile, string destinationFileName, bool deleteFileAfterUpload)
         {
             if (IsConnected)
             {
+                bool result;
                 if (File.Exists(localFile))
                 {
-                    this._client.UploadFile(localFile, destinationFileName, deleteFileAfterUpload);
+                    result = _client.UploadFile(localFile, destinationFileName, deleteFileAfterUpload);
                 }
                 else
                     throw new FileNotFoundException(string.Format(Messages.Messages.UploadFileNotFoundExceptionMessage, localFile));
 
-                if (deleteFileAfterUpload)
+                if (deleteFileAfterUpload && result)
                     File.Delete(localFile);
+
+                return result;
             }
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
@@ -167,12 +220,12 @@ namespace FTPKey.BaseClient
         /// </summary>
         /// <param name="localFileStream">The local file stream</param>
         /// <param name="destinationFileName">Destination file name</param>
-        public void UploadFile(Stream localFileStream, string destinationFileName)
+        public bool UploadFile(Stream localFileStream, string destinationFileName)
         {
             if (IsConnected)
-                _client.UploadFile(localFileStream, destinationFileName);
+                return _client.UploadFile(localFileStream, destinationFileName);
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
@@ -181,9 +234,9 @@ namespace FTPKey.BaseClient
         public string[] GetFilesList()
         {
             if (IsConnected)
-                return this._client.GetFilesList();
+                return _client.GetFilesList();
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
@@ -221,7 +274,7 @@ namespace FTPKey.BaseClient
                     return null;
             }
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
@@ -230,9 +283,9 @@ namespace FTPKey.BaseClient
         public string[] GetFoldersList()
         {
             if (IsConnected)
-                return this._client.GetFoldersList();
+                return _client.GetFoldersList();
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
@@ -244,7 +297,7 @@ namespace FTPKey.BaseClient
             if (IsConnected)
                 return _client.GetFoldersList(path);
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
 
@@ -253,36 +306,36 @@ namespace FTPKey.BaseClient
         /// </summary>
         /// <param name="currentName">the current remote file's name</param>
         /// <param name="newName">The new name</param>
-        public void RenameFile(string currentName, string newName)
+        public bool RenameFile(string currentName, string newName)
         {
             if (IsConnected)
-                this._client.RenameFile(currentName, newName);
+                return _client.RenameFile(currentName, newName);
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
         /// Creates a new remote folder; it creates all the missing folders into the path, recursively (for instance /fold1/fold2)
         /// </summary>
         /// <param name="path">The partial or full path to create</param>
-        public void CreateFolder(string path)
+        public bool CreateFolder(string path)
         {
             if (IsConnected)
-                this._client.CreateFolder(_CleanRemoteFolder(path));
+                return _client.CreateFolder(_CleanRemoteFolder(path));
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
         /// Deletes a remote folder, not recursively
         /// </summary>
         /// <param name="path">The folder to delete</param>
-        public void DeleteFolder(string path)
+        public bool DeleteFolder(string path)
         {
             if (IsConnected)
-                this._client.DeleteFolder(path);
+                return _client.DeleteFolder(path);
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
@@ -290,12 +343,12 @@ namespace FTPKey.BaseClient
         /// </summary>
         /// <param name="path">The folder to delete</param>
         /// <param name="deleteRecursively">If true, a recursive deletion will be performed</param>
-        public void DeleteFolder(string path, bool deleteRecursively)
+        public bool DeleteFolder(string path, bool deleteRecursively)
         {
             if (IsConnected)
-                this._client.DeleteFolder(path, deleteRecursively);
+                return _client.DeleteFolder(path, deleteRecursively);
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
@@ -304,7 +357,7 @@ namespace FTPKey.BaseClient
         /// <param name="newFolder">The new relative or full path</param>
         public void SetCurrentFolder(string newFolder)
         {
-            this._client.SetCurrentFolder(this._CleanRemoteFolder(newFolder));
+            _client.SetCurrentFolder(_CleanRemoteFolder(newFolder));
         }
 
         /// <summary>
@@ -312,7 +365,7 @@ namespace FTPKey.BaseClient
         /// </summary>
         public string GetCurrentFolder()
         {
-            return this._client.GetCurrentFolder();
+            return _client.GetCurrentFolder();
         }
 
         /// <summary>
@@ -325,7 +378,7 @@ namespace FTPKey.BaseClient
             if (IsConnected)
                 return _client.FileExists(filePath);
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
 
         /// <summary>
@@ -338,7 +391,7 @@ namespace FTPKey.BaseClient
             if (IsConnected)
                 return _client.FolderExists(folder);
             else
-                throw new Exception(Messages.Messages.ClientDisconnected);
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }
         #endregion
 
@@ -397,9 +450,21 @@ namespace FTPKey.BaseClient
         /// <param name="port">Ftp Port</param>
         /// <param name="userName">The authentication's user name</param>
         /// <param name="password">User password</param>
+        public Client(string host, int port, string userName, string password)
+            : this(host, port, userName, password, false)
+        {
+        }
+
+        /// <summary>
+        /// Create a new instance of the client and connects to the Ftp
+        /// </summary>
+        /// <param name="host">Ftp Url</param>
+        /// <param name="port">Ftp Port</param>
+        /// <param name="userName">The authentication's user name</param>
+        /// <param name="password">User password</param>
         /// <param name="connect">If true, the connection will start immediately without the need to call Connect method</param>
         public Client(string host, int port, string userName, string password, bool connect)
-            : this(host, port, userName, password, connect, string.Empty)
+            : this(host, port, userName, password, connect, ConnectionProtocol.Default)
         {
         }
 
@@ -411,24 +476,9 @@ namespace FTPKey.BaseClient
         /// <param name="userName">The authentication's user name</param>
         /// <param name="password">User password</param>
         /// <param name="connect">If true, the connection will start immediately without the need to call Connect method</param>
-        /// <param name="remoteFolder">The folder to whitch connect; if empty, the current folder will be the root path</param>
-        public Client(string host, int port, string userName, string password, bool connect, string remoteFolder)
-            : this(host, port, userName, password, connect, remoteFolder, ConnectionProtocol.Default)
-        {
-        }
-
-        /// <summary>
-        /// Create a new instance of the client and connects to the Ftp
-        /// </summary>
-        /// <param name="host">Ftp Url</param>
-        /// <param name="port">Ftp Port</param>
-        /// <param name="userName">The authentication's user name</param>
-        /// <param name="password">User password</param>
-        /// <param name="connect">If true, the connection will start immediately without the need to call Connect method</param>
-        /// <param name="remoteFolder">The folder to whitch connect; if empty, the current folder will be the root path</param>
         /// <param name="protocol">The required protocol to establish connection</param>
-        public Client(string host, int port, string userName, string password, bool connect, string remoteFolder, ConnectionProtocol protocol)
-            : this(host, port, userName, password, connect, remoteFolder, protocol, EncryptionType.None, string.Empty)
+        public Client(string host, int port, string userName, string password, bool connect, ConnectionProtocol protocol)
+            : this(host, port, userName, password, connect, protocol, EncryptionType.None)
         {
         }
 
@@ -440,11 +490,10 @@ namespace FTPKey.BaseClient
         /// <param name="userName">The authentication's user name</param>
         /// <param name="password">User password</param>
         /// <param name="connect">If true, the connection will start immediately without the need to call Connect method</param>
-        /// <param name="remoteFolder">The folder to whitch connect; if empty, the current folder will be the root path</param>
         /// <param name="protocol">The required protocol to establish connection</param>
         /// <param name="encryptionType">Specify what type of encryption is needed; Explicit equals to TLS, Implicit equals to SSL</param>
-        public Client(string host, int port, string userName, string password, bool connect, string remoteFolder, ConnectionProtocol protocol, EncryptionType encryptionType)
-            : this(host, port, userName, password, connect, remoteFolder, protocol, encryptionType, string.Empty)
+        public Client(string host, int port, string userName, string password, bool connect, ConnectionProtocol protocol, EncryptionType encryptionType)
+            : this(host, port, userName, password, connect, protocol, encryptionType, string.Empty)
         {
         }
 
@@ -456,21 +505,20 @@ namespace FTPKey.BaseClient
         /// <param name="userName">The authentication's user name</param>
         /// <param name="password">User password</param>
         /// <param name="connect">If true, the connection will start immediately without the need to call Connect method</param>
-        /// <param name="remoteFolder">The folder to whitch connect; if empty, the current folder will be the root path</param>
         /// <param name="protocol">The required protocol to establish connection</param>
         /// <param name="encryptionType">Specify what type of encryption is needed; Explicit equals to TLS, Implicit equals to SSL</param>
         /// <param name="fingerPrint">Fingerprint to validate connection (for SFTP only)</param>
-        public Client(string host, int port, string userName, string password, bool connect, string remoteFolder, ConnectionProtocol protocol, EncryptionType encryptionType, string fingerPrint)
+        public Client(string host, int port, string userName, string password, bool connect, ConnectionProtocol protocol, EncryptionType encryptionType, string fingerPrint)
         {
             switch (protocol)
             {
                 case ConnectionProtocol.Default:
                 case ConnectionProtocol.Ftp:
                 case ConnectionProtocol.Ftps:
-                    this._client = new FtpClient(host, port, userName, password, (protocol == ConnectionProtocol.Ftps), encryptionType);
+                    _client = new FtpClient(host, port, userName, password, (protocol == ConnectionProtocol.Ftps), encryptionType);
                     break;
                 case ConnectionProtocol.Sftp:
-                    this._client = new SftpClient(host, port, userName, password, fingerPrint);
+                    _client = new SftpClient(host, port, userName, password, fingerPrint);
                     break;
                 default:
                     break;
@@ -478,9 +526,8 @@ namespace FTPKey.BaseClient
 
             if (connect)
             {
-                this._client.Connect();
+                Connect();
             }
-            this._client.SetCurrentFolder(this._CleanRemoteFolder(remoteFolder));
         }
         #endregion
 
@@ -499,11 +546,11 @@ namespace FTPKey.BaseClient
                 {
                 }
 
-                if (this._client != null)
+                if (_client != null)
                 {
-                    this._client.Disconnect();
-                    this._client.Dispose();
-                    this._client = null;
+                    _client.Disconnect();
+                    _client.Dispose();
+                    _client = null;
                 }
 
                 isDisposed = true;

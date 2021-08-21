@@ -24,7 +24,7 @@ namespace FTPKey.BaseClient
         #endregion
 
         #region Properties
-        public bool IsConnected => _client.IsConnected;
+        public bool IsConnected => _client?.IsConnected ?? false;
         #endregion
 
         #region Connection Methods
@@ -35,8 +35,8 @@ namespace FTPKey.BaseClient
         {
             try
             {
-                if (!this._client.IsConnected)
-                    this._client.Connect();
+                if (!_client.IsConnected)
+                    _client.Connect();
             }
             catch (Renci.SshNet.Common.SshConnectionException ex)
             {
@@ -53,8 +53,8 @@ namespace FTPKey.BaseClient
         /// </summary>
         public void Disconnect()
         {
-            if (this._client.IsConnected)
-                this._client.Disconnect();
+            if (_client.IsConnected)
+                _client.Disconnect();
         }
         #endregion
 
@@ -63,11 +63,11 @@ namespace FTPKey.BaseClient
         /// Deletes the desired remote file
         /// </summary>
         /// <param name="remoteFileName">The file to delete</param>
-        public void DeleteFile(string remoteFileName)
+        public bool DeleteFile(string remoteFileName)
         {
             try
             {
-                this._client.DeleteFile(remoteFileName);
+                _client.DeleteFile(remoteFileName);
             }
             catch (Renci.SshNet.Common.SshConnectionException ex)
             {
@@ -81,6 +81,8 @@ namespace FTPKey.BaseClient
             {
                 throw new Exception(string.Format(Messages.Messages.PermissionDeniedExceptionMessage, Messages.Messages.OperationDelete), ex);
             }
+
+            return !_client.Exists(remoteFileName);
         }
 
         /// <summary>
@@ -118,8 +120,8 @@ namespace FTPKey.BaseClient
 
             try
             {
-                this._client.DownloadFile(remoteFileName, outStream);
-                remoteFileSize = this._client.GetAttributes(remoteFileName).Size;
+                _client.DownloadFile(remoteFileName, outStream);
+                remoteFileSize = _client.GetAttributes(remoteFileName).Size;
             }
             catch (Renci.SshNet.Common.SshConnectionException ex)
             {
@@ -158,16 +160,16 @@ namespace FTPKey.BaseClient
         /// <param name="localFile">Full local file path</param>
         /// <param name="destinationFileName">Destination file name</param>
         /// <param name="deleteFileAfterUpload">If true, it deletes the local file after uploading it</param>
-        public void UploadFile(string localFile, string destinationFileName, bool deleteFileAfterUpload)
+        public bool UploadFile(string localFile, string destinationFileName, bool deleteFileAfterUpload)
         {
             using (FileStream localFileStream = new FileStream(localFile, FileMode.Open, FileAccess.Read))
             {
-                UploadFile(localFileStream, destinationFileName);
+                return UploadFile(localFileStream, destinationFileName);
             }
         }
-        public void UploadFile(string localFile, bool deleteFileAfterUpload)
+        public bool UploadFile(string localFile, bool deleteFileAfterUpload)
         {
-            this.UploadFile(localFile, Path.GetFileName(localFile), deleteFileAfterUpload);
+            return UploadFile(localFile, Path.GetFileName(localFile), deleteFileAfterUpload);
         }
 
         /// <summary>
@@ -175,24 +177,26 @@ namespace FTPKey.BaseClient
         /// </summary>
         /// <param name="localFileStream">The local file stream</param>
         /// <param name="destinationFileName">Destination file name</param>
-        public void UploadFile(Stream localFileStream, string destinationFileName)
+        public bool UploadFile(Stream localFileStream, string destinationFileName)
         {
             long remoteFileLength = 0;
 
             try
             {
-                this._client.UploadFile(localFileStream, destinationFileName, true);
+                _client.UploadFile(localFileStream, destinationFileName, true);
 
-                if (this._client.Exists(destinationFileName))
-                    remoteFileLength = this._client.GetAttributes(destinationFileName).Size;
+                if (_client.Exists(destinationFileName))
+                    remoteFileLength = _client.GetAttributes(destinationFileName).Size;
                 else
-                    throw new FileNotFoundException(string.Format(Messages.Messages.OperationNotCompletedException, Messages.Messages.OperationUpload, destinationFileName));
+                    return false;
 
                 if (remoteFileLength != localFileStream.Length)
                 {
-                    this._client.DeleteFile(destinationFileName);
-                    throw new Exception(string.Format(Messages.Messages.OperationNotCompletedException, Messages.Messages.OperationUpload, destinationFileName));
+                    _client.DeleteFile(destinationFileName);
+                    return false;
                 }
+
+                return true;
             }
             catch (Renci.SshNet.Common.SshConnectionException ex)
             {
@@ -213,7 +217,7 @@ namespace FTPKey.BaseClient
         /// </summary>
         public string[] GetFilesList()
         {
-            return this.GetFilesList(this.GetCurrentFolder());
+            return GetFilesList(GetCurrentFolder());
         }
 
         /// <summary>
@@ -227,7 +231,7 @@ namespace FTPKey.BaseClient
 
             try
             {
-                sftpFiles = this._client.ListDirectory(path).ToList();
+                sftpFiles = _client.ListDirectory(path).ToList();
             }
             catch (Renci.SshNet.Common.SshConnectionException ex)
             {
@@ -235,7 +239,7 @@ namespace FTPKey.BaseClient
             }
             catch (Renci.SshNet.Common.SftpPathNotFoundException ex)
             {
-                throw new Exception(string.Format(Messages.Messages.PathNotFoundExceptionMessage, Messages.Messages.OperationGetFilesList, this._client.WorkingDirectory), ex);
+                throw new Exception(string.Format(Messages.Messages.PathNotFoundExceptionMessage, Messages.Messages.OperationGetFilesList, _client.WorkingDirectory), ex);
             }
             catch (Renci.SshNet.Common.SftpPermissionDeniedException ex)
             {
@@ -253,7 +257,7 @@ namespace FTPKey.BaseClient
         /// </summary>
         public string[] GetFoldersList()
         {
-            return this.GetFoldersList(this.GetCurrentFolder());
+            return GetFoldersList(GetCurrentFolder());
         }
 
         /// <summary>
@@ -267,7 +271,7 @@ namespace FTPKey.BaseClient
 
             try
             {
-                sftpFolders = this._client.ListDirectory(path).ToList();
+                sftpFolders = _client.ListDirectory(path).ToList();
             }
             catch (Renci.SshNet.Common.SshConnectionException ex)
             {
@@ -275,7 +279,7 @@ namespace FTPKey.BaseClient
             }
             catch (Renci.SshNet.Common.SftpPathNotFoundException ex)
             {
-                throw new Exception(string.Format(Messages.Messages.PathNotFoundExceptionMessage, Messages.Messages.OperationGetFoldersList, this._client.WorkingDirectory), ex);
+                throw new Exception(string.Format(Messages.Messages.PathNotFoundExceptionMessage, Messages.Messages.OperationGetFoldersList, _client.WorkingDirectory), ex);
             }
             catch (Renci.SshNet.Common.SftpPermissionDeniedException ex)
             {
@@ -293,11 +297,11 @@ namespace FTPKey.BaseClient
         /// </summary>
         /// <param name="currentName">the current remote file's name</param>
         /// <param name="newName">The new name</param>
-        public void RenameFile(string currentName, string newName)
+        public bool RenameFile(string currentName, string newName)
         {
             try
             {
-                this._client.RenameFile(currentName, newName);
+                _client.RenameFile(currentName, newName);
             }
             catch (Renci.SshNet.Common.SshConnectionException ex)
             {
@@ -311,13 +315,15 @@ namespace FTPKey.BaseClient
             {
                 throw new Exception(string.Format(Messages.Messages.PermissionDeniedExceptionMessage, Messages.Messages.OperationRenameFile), ex);
             }
+
+            return _client.Exists(newName);
         }
 
         /// <summary>
         /// Creates a new remote folder; it creates all the missing folders into the path, recursively (for instance /fold1/fold2)
         /// </summary>
         /// <param name="path">The partial or full path to create</param>
-        public void CreateFolder(string path)
+        public bool CreateFolder(string path)
         {
             try
             {
@@ -327,7 +333,7 @@ namespace FTPKey.BaseClient
                 {
                     path += $"/{splittedPath[index]}";
                     if (!_client.Exists(path))
-                        this._client.CreateDirectory(path);
+                        _client.CreateDirectory(path);
                 }
             }
             catch (Renci.SshNet.Common.SshConnectionException ex)
@@ -342,16 +348,18 @@ namespace FTPKey.BaseClient
             {
                 throw new Exception(string.Format(Messages.Messages.PermissionDeniedExceptionMessage, Messages.Messages.OperationCreateFolder), ex);
             }
+
+            return _client.Exists(path);
         }
 
         /// <summary>
         /// Deletes a remote folder, not recursively
         /// </summary>
-        public void DeleteFolder(string path)
+        public bool DeleteFolder(string path)
         {
             try
             {
-                this._client.DeleteDirectory(path);
+                _client.DeleteDirectory(path);
             }
             catch (Renci.SshNet.Common.SshConnectionException ex)
             {
@@ -369,6 +377,8 @@ namespace FTPKey.BaseClient
             {
                 throw new Exception(string.Format(Messages.Messages.DeleteFolderNotEmpty, path), ex);
             }
+
+            return !_client.Exists(path);
         }
 
         /// <summary>
@@ -376,7 +386,7 @@ namespace FTPKey.BaseClient
         /// </summary>
         /// <param name="path">The folder to delete</param>
         /// <param name="deleteRecursively">If true, a recursive deletion will be performed</param>
-        public void DeleteFolder(string path, bool deleteRecursively)
+        public bool DeleteFolder(string path, bool deleteRecursively)
         {
             if (deleteRecursively)
             {
@@ -384,7 +394,7 @@ namespace FTPKey.BaseClient
 
                 try
                 {
-                    files = this._client.ListDirectory(path).ToList();
+                    files = _client.ListDirectory(path).ToList();
                 }
                 catch (Renci.SshNet.Common.SshConnectionException ex)
                 {
@@ -403,21 +413,16 @@ namespace FTPKey.BaseClient
                 {
                     if (directory.Name != "." && directory.Name != "..")
                     {
-                        this.DeleteFolder(directory.FullName, deleteRecursively);
+                        DeleteFolder(directory.FullName, deleteRecursively);
                     }
                 }
 
                 foreach (Renci.SshNet.Sftp.SftpFile file in files.Where(x => !x.IsDirectory))
                 {
-                    this.DeleteFile(file.FullName);
+                    DeleteFile(file.FullName);
                 }
-
-                this.DeleteFolder(path);
             }
-            else
-            {
-                this.DeleteFolder(path);
-            }
+            return DeleteFolder(path);
         }
 
         /// <summary>
@@ -428,7 +433,7 @@ namespace FTPKey.BaseClient
         {
             try
             {
-                this._client.ChangeDirectory(newFolder);
+                _client.ChangeDirectory(newFolder);
             }
             catch (Renci.SshNet.Common.SshConnectionException ex)
             {
@@ -449,7 +454,7 @@ namespace FTPKey.BaseClient
         /// </summary>
         public string GetCurrentFolder()
         {
-            return this._client.WorkingDirectory;
+            return _client.WorkingDirectory;
         }
 
         /// <summary>
@@ -481,9 +486,9 @@ namespace FTPKey.BaseClient
         /// <param name="e"></param>
         private void _Client_HostKeyReceived(object sender, Renci.SshNet.Common.HostKeyEventArgs e)
         {
-            if (!string.IsNullOrEmpty(this._fingerPrint))
+            if (!string.IsNullOrEmpty(_fingerPrint))
             {
-                byte[] fingerPrint = this._fingerPrint.Split(':').Select(s => Convert.ToByte(s, 16)).ToArray();
+                byte[] fingerPrint = _fingerPrint.Split(':').Select(s => Convert.ToByte(s, 16)).ToArray();
                 e.CanTrust = e.FingerPrint.SequenceEqual(fingerPrint);
             }
             else
@@ -495,20 +500,20 @@ namespace FTPKey.BaseClient
         public SftpClient(string host, int port, string userName, string password, string fingerPrint)
         {
             // Save the fingerprint for validation
-            this._fingerPrint = fingerPrint;
+            _fingerPrint = fingerPrint;
 
-            this._client = new Renci.SshNet.SftpClient(host, port, userName, password);
-            this._client.HostKeyReceived += _Client_HostKeyReceived;
+            _client = new Renci.SshNet.SftpClient(host, port, userName, password);
+            _client.HostKeyReceived += _Client_HostKeyReceived;
         }
         #endregion
 
         #region IDisposable
         public void Dispose()
         {
-            if (this._client != null)
+            if (_client != null)
             {
-                this._client.Dispose();
-                this._client = null;
+                _client.Dispose();
+                _client = null;
             }
         }
         #endregion
