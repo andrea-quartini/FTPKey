@@ -26,18 +26,21 @@ namespace FTPKey.Test
         // Test Files
         private const string TEST_FILE_1 = "TestFile.txt";
         private const string TEST_FILE_2 = "Verbundmörtel Zubehör + Technische Daten DE.pdf";
+        private const string TEST_FILE_3 = "TestFile2.txt";
+        private const string TEST_FOLDER_1 = "TestSubFolder";
+        private const string TEST_FOLDER_2 = @"TestSubFolder2\TestSubFolder3";
+        private const string TEST_FOLDER_3 = @"TestSubFolder4";
+        private const string TEST_DOWNLOAD_FOLDER = "DownloadFolder";
         #endregion
 
-        #region Client
-        //FTPKey.IFtpClient _client;
+        #region Variables
+        DirectoryInfo testFolder = new DirectoryInfo(TEST_FILES_PATH);
+        DirectoryInfo activeFolder = new DirectoryInfo(ACTIVE_TEST_PATH);
         #endregion
 
         #region Constructor
         public Tests()
         {
-            DirectoryInfo testFolder = new DirectoryInfo(TEST_FILES_PATH);
-            DirectoryInfo activeFolder = new DirectoryInfo(ACTIVE_TEST_PATH);
-
             // Delete all files and directories from the active folder
             foreach (FileInfo file in activeFolder.GetFiles())
             {
@@ -53,6 +56,8 @@ namespace FTPKey.Test
             {
                 file.CopyTo(Path.Combine(ACTIVE_TEST_PATH, file.Name));
             }
+
+            Directory.CreateDirectory(Path.Combine(activeFolder.FullName, TEST_DOWNLOAD_FOLDER));
         }
         #endregion
 
@@ -92,12 +97,29 @@ namespace FTPKey.Test
             }
         }
 
+        [TestMethod]
+        public void Test_AD_ListAndDeleteFilesAndFolders()
+        {
+            using (Client client = _GetClient(true))
+            {
+                foreach (string file in client.GetFilesList())
+                {
+                    client.DeleteFile(file);
+                }
+
+                foreach (string folder in client.GetFoldersList())
+                {
+                    client.DeleteFolder(folder, true);
+                }
+            }
+        }
+
         [DataTestMethod]
         [DataRow(false, TEST_FILE_1)]
         [DataRow(true, TEST_FILE_1)]
         [DataRow(false, TEST_FILE_2)]
         [DataRow(true, TEST_FILE_2)]
-        public void Test_AD_UploadFile(bool connect, string fileName)
+        public void Test_AE_UploadFile(bool connect, string fileName)
         {
             using (Client client = _GetClient(connect))
             {
@@ -105,6 +127,143 @@ namespace FTPKey.Test
                 {
                     bool result = client.UploadFile(Path.Combine(ACTIVE_TEST_PATH, fileName), fileName, false);
                     Assert.IsTrue(result);
+                }
+                catch (System.Exception ex)
+                {
+                    Assert.IsTrue(!connect && ex is FTPKey.Exceptions.FtpClientIsDisconnectedException);
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(false, TEST_FILE_3)]
+        [DataRow(true, TEST_FILE_3)]
+        public void Test_AF_UploadFileSubFolder(bool connect, string fileName)
+        {
+            using (Client client = _GetClient(connect))
+            {
+                try
+                {
+                    if (client.CreateFolder(TEST_FOLDER_1))
+                    {
+                        client.SetCurrentFolder(TEST_FOLDER_1);
+                        bool result = client.UploadFile(Path.Combine(ACTIVE_TEST_PATH, fileName), fileName, false);
+                        Assert.IsTrue(result);
+                    }
+                    else
+                    {
+                        Assert.Fail();
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Assert.IsTrue(!connect && ex is FTPKey.Exceptions.FtpClientIsDisconnectedException);
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(false, TEST_FILE_3)]
+        [DataRow(true, TEST_FILE_3)]
+        public void Test_AG_UploadFileSubFolder2(bool connect, string fileName)
+        {
+            using (Client client = _GetClient(connect))
+            {
+                try
+                {
+                    if (client.CreateFolder(TEST_FOLDER_2))
+                    {
+                        client.SetCurrentFolder(TEST_FOLDER_2);
+                        bool result = client.UploadFile(Path.Combine(ACTIVE_TEST_PATH, fileName), fileName, false);
+                        Assert.IsTrue(result);
+                    }
+                    else
+                    {
+                        Assert.Fail();
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Assert.IsTrue(!connect && ex is FTPKey.Exceptions.FtpClientIsDisconnectedException);
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(false, TEST_FILE_3)]
+        [DataRow(true, TEST_FILE_3)]
+        public void Test_AH_UploadFileSubFolder3_FileStream(bool connect, string fileName)
+        {
+            using (Client client = _GetClient(connect))
+            {
+                try
+                {
+                    if (client.CreateFolder(TEST_FOLDER_3))
+                    {
+                        using (Stream stream = File.OpenRead(Path.Combine(ACTIVE_TEST_PATH, fileName)))
+                        {
+                            bool result = client.UploadFile(stream, fileName);
+                            Assert.IsTrue(result);
+                        }
+                    }
+                    else
+                    {
+                        Assert.Fail();
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Assert.IsTrue(!connect && ex is FTPKey.Exceptions.FtpClientIsDisconnectedException);
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(false, TEST_FILE_1, false)]
+        [DataRow(true, TEST_FILE_1, false)]
+        [DataRow(true, TEST_FILE_1, true)]
+        public void Test_AI_DownloadFile(bool connect, string fileName, bool deleteFileAfterDownload)
+        {
+            using (Client client = _GetClient(connect))
+            {
+                try
+                {
+                    string localFilePath = Path.Combine(activeFolder.FullName, TEST_DOWNLOAD_FOLDER, fileName);
+                    
+                    if (File.Exists(localFilePath))
+                        File.Delete(localFilePath);
+
+                    bool result = client.DownloadFile(fileName, localFilePath, deleteFileAfterDownload);
+
+                    Assert.IsTrue(result && (!deleteFileAfterDownload || (deleteFileAfterDownload && !client.FileExists(fileName))));
+                }
+                catch (System.Exception ex)
+                {
+                    Assert.IsTrue(!connect && ex is FTPKey.Exceptions.FtpClientIsDisconnectedException);
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(false, TEST_FILE_1, false)]
+        [DataRow(true, TEST_FILE_1, false)]
+        [DataRow(true, TEST_FILE_1, true)]
+        public void Test_AJ_DownloadFile_FileStream(bool connect, string fileName, bool deleteFileAfterDownload)
+        {
+            using (Client client = _GetClient(connect))
+            {
+                try
+                {
+                    string localFilePath = Path.Combine(activeFolder.FullName, TEST_DOWNLOAD_FOLDER, fileName);
+                    
+                    if (File.Exists(localFilePath))
+                        File.Delete(localFilePath);
+
+                    using (Stream stream = File.Open(localFilePath, FileMode.OpenOrCreate, FileAccess.Write))
+                    {
+                        bool result = client.DownloadFile(fileName, stream, deleteFileAfterDownload);
+                        Assert.IsTrue(result && (!deleteFileAfterDownload || (deleteFileAfterDownload && !client.FileExists(fileName))));
+                    }
                 }
                 catch (System.Exception ex)
                 {
