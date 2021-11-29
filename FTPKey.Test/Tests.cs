@@ -11,10 +11,10 @@ namespace FTPKey.Test
         /// Set constants before executing any tests
         /// </summary>
         #region Constants
-        private const string HOST = "109.233.125.195";
+        private const string HOST = "";
         private const int PORT = 21;
-        private const string USERNAME = "DocFinanceTest";
-        private const string PASSWORD = "kqB5o8tB";
+        private const string USERNAME = "";
+        private const string PASSWORD = "";
         private const FTPKey.ConnectionProtocol PROTOCOL = FTPKey.ConnectionProtocol.Ftp;
         private const FTPKey.EncryptionType ENCRYPTION = FTPKey.EncryptionType.None;
         private const string FINGERPRINT = "";
