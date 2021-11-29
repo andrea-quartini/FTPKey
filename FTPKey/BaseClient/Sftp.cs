@@ -319,6 +319,66 @@ namespace FTPKey.BaseClient
             return _client.Exists(newName);
         }
 
+        public bool CopyFile(string file, string destinationFile)
+        {
+            bool output = false;
+            try
+            {
+                if (_client.Exists(file))
+                {
+                    using(MemoryStream stream = new MemoryStream())
+                    {
+                        _client.DownloadFile(file, stream);
+                        _client.UploadFile(stream, destinationFile);
+
+                        output = _client.Exists(destinationFile);
+                    }
+                }
+                return output;
+            }
+            catch (Renci.SshNet.Common.SshConnectionException ex)
+            {
+                throw new Exception(Messages.Messages.ConnectionExceptionMessage, ex);
+            }
+            catch (Renci.SshNet.Common.SftpPathNotFoundException ex)
+            {
+                throw new Exception(string.Format(Messages.Messages.PathNotFoundExceptionMessage, Messages.Messages.OperationRenameFile, file), ex);
+            }
+            catch (Renci.SshNet.Common.SftpPermissionDeniedException ex)
+            {
+                throw new Exception(string.Format(Messages.Messages.PermissionDeniedExceptionMessage, Messages.Messages.OperationRenameFile), ex);
+            }
+        }
+
+        public bool MoveFile(string file, string destinationFile)
+        {
+            bool output = false;
+            try
+            {
+                if (_client.Exists(file))
+                {
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        _client.RenameFile(file, destinationFile);
+                        output = _client.Exists(destinationFile);
+                    }
+                }
+                return output;
+            }
+            catch (Renci.SshNet.Common.SshConnectionException ex)
+            {
+                throw new Exception(Messages.Messages.ConnectionExceptionMessage, ex);
+            }
+            catch (Renci.SshNet.Common.SftpPathNotFoundException ex)
+            {
+                throw new Exception(string.Format(Messages.Messages.PathNotFoundExceptionMessage, Messages.Messages.OperationRenameFile, file), ex);
+            }
+            catch (Renci.SshNet.Common.SftpPermissionDeniedException ex)
+            {
+                throw new Exception(string.Format(Messages.Messages.PermissionDeniedExceptionMessage, Messages.Messages.OperationRenameFile), ex);
+            }
+        }
+
         /// <summary>
         /// Creates a new remote folder; it creates all the missing folders into the path, recursively (for instance /fold1/fold2)
         /// </summary>

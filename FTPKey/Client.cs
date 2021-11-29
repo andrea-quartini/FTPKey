@@ -133,9 +133,6 @@ namespace FTPKey
             else
                 throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
 
-            if (deleteFileAfterDownload && result)
-                _client.DeleteFile(fileName);
-
             return result;
         }
 
@@ -310,6 +307,34 @@ namespace FTPKey
         {
             if (IsConnected)
                 return _client.RenameFile(currentName, newName);
+            else
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
+        }
+
+        /// <summary>
+        /// Copy a file into a new path
+        /// </summary>
+        /// <param name="file">The file to copy</param>
+        /// <param name="destinationFile">New file's path</param>
+        /// <returns></returns>
+        public bool CopyFile(string file, string destinationFile)
+        {
+            if (IsConnected)
+                return _client.CopyFile(file, destinationFile);
+            else
+                throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
+        }
+
+        /// <summary>
+        /// Move a file to a new folder
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="destinationFile"></param>
+        /// <returns></returns>
+        public bool MoveFile(string file, string destinationFile)
+        {
+            if (IsConnected)
+                return _client.MoveFile(file, destinationFile);
             else
                 throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);
         }

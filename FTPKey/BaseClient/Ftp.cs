@@ -298,6 +298,56 @@ namespace FTPKey.BaseClient
         }
 
         /// <summary>
+        /// Copy a file into a new path
+        /// </summary>
+        /// <param name="file">The file to copy</param>
+        /// <param name="destinationFile">New file's path</param>
+        /// <returns></returns>
+        public bool CopyFile(string file, string destinationFile)
+        {
+            bool output = false;
+            try
+            {
+                if (_client.FileExists(file))
+                {
+                    using(MemoryStream stream = new MemoryStream())
+                    {
+                        _client.Download(stream, file);
+                        output = _client.Upload(stream, destinationFile, FtpRemoteExists.Overwrite, true) == FtpStatus.Success;
+                    }
+                }
+                return output;
+            }
+            catch (FluentFTP.FtpException ex)
+            {
+                throw new Exception(string.Format(Messages.Messages.GenericException, Messages.Messages.OperationCopyFile, (ex.InnerException != null ? ex.InnerException.Message : ex.Message)), ex);
+            }
+        }
+
+        /// <summary>
+        /// Move a file to a new folder
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="destinationFile"></param>
+        /// <returns></returns>
+        public bool MoveFile(string file, string destinationFile)
+        {
+            bool output = false;
+            try
+            {
+                if (_client.FileExists(file))
+                {
+                    output = _client.MoveFile(file, destinationFile, FtpRemoteExists.Overwrite);
+                }
+                return output;
+            }
+            catch (FluentFTP.FtpException ex)
+            {
+                throw new Exception(string.Format(Messages.Messages.GenericException, Messages.Messages.OperationCopyFile, (ex.InnerException != null ? ex.InnerException.Message : ex.Message)), ex);
+            }
+        }
+
+        /// <summary>
         /// Creates a new remote folder; it creates all the missing folders into the path, recursively (for instance /fold1/fold2)
         /// </summary>
         /// <param name="path">The partial or full path to create</param>

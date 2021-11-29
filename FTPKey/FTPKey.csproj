@@ -15,7 +15,7 @@ New test were added to test project.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFrameworks)|$(Platform)'=='Release|net40;net45;net472;net48;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1;net50;netstandard2.0;netstandard2.1|AnyCPU'">
-    <DocumentationFile>D:\Sviluppo\GIT\FTPKey\FTPKey\bin\Debug\FTPKey.xml</DocumentationFile>
+    <DocumentationFile>F:\Sviluppo\GIT\FTPKey\FTPKey\bin\Debug\FTPKey.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>

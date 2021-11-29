@@ -29,7 +29,7 @@ namespace FTPKey.BaseClient
 
         #region Transfer
         /// <summary>
-        /// Deletes the desired remote file
+        /// Deletes the remote file
         /// </summary>
         /// <param name="remoteFileName">The file to delete</param>
         bool DeleteFile(string remoteFileName);
@@ -93,6 +93,22 @@ namespace FTPKey.BaseClient
         /// <param name="currentName">the current remote file's name</param>
         /// <param name="newName">The new name</param>
         bool RenameFile(string currentName, string newName);
+
+        /// <summary>
+        /// Copy a file into a new path
+        /// </summary>
+        /// <param name="file">The file to copy</param>
+        /// <param name="destinationFile">New file's path</param>
+        /// <returns></returns>
+        bool CopyFile(string file, string destinationFile);
+
+        /// <summary>
+        /// Move a file to a new folder
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="destinationFile"></param>
+        /// <returns></returns>
+        bool MoveFile(string file, string destinationFile);
         
         /// <summary>
         /// Creates a new remote folder; it creates all the missing folders into the path, recursively (for instance /fold1/fold2)

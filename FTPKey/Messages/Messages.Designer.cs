@@ -115,6 +115,15 @@ namespace FTPKey.Messages {
         }
         
         /// <summary>
+        ///   Cerca una stringa localizzata simile a CopyFile.
+        /// </summary>
+        internal static string OperationCopyFile {
+            get {
+                return ResourceManager.GetString("OperationCopyFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Cerca una stringa localizzata simile a CreateFolder.
         /// </summary>
         internal static string OperationCreateFolder {
@@ -165,6 +174,15 @@ namespace FTPKey.Messages {
         internal static string OperationGetFoldersList {
             get {
                 return ResourceManager.GetString("OperationGetFoldersList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Cerca una stringa localizzata simile a MoveFile.
+        /// </summary>
+        internal static string OperationMoveFile {
+            get {
+                return ResourceManager.GetString("OperationMoveFile", resourceCulture);
             }
         }
         

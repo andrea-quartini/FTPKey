@@ -135,6 +135,9 @@
   <data name="OperationChangeDirectory" xml:space="preserve">
     <value>SetDirectory</value>
   </data>
+  <data name="OperationCopyFile" xml:space="preserve">
+    <value>CopyFile</value>
+  </data>
   <data name="OperationCreateFolder" xml:space="preserve">
     <value>CreateFolder</value>
   </data>
@@ -152,6 +155,9 @@
   </data>
   <data name="OperationGetFoldersList" xml:space="preserve">
     <value>GetFoldersList</value>
+  </data>
+  <data name="OperationMoveFile" xml:space="preserve">
+    <value>MoveFile</value>
   </data>
   <data name="OperationNotCompletedException" xml:space="preserve">
     <value>An error occurred executing operation {0} on file {1}, operation did not succeed</value>

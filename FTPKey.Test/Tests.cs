@@ -11,22 +11,23 @@ namespace FTPKey.Test
         /// Set constants before executing any tests
         /// </summary>
         #region Constants
-        private const string HOST = "192.168.1.235";
+        private const string HOST = "109.233.125.195";
         private const int PORT = 21;
-        private const string USERNAME = "TestUser";
-        private const string PASSWORD = "Password2020";
+        private const string USERNAME = "DocFinanceTest";
+        private const string PASSWORD = "kqB5o8tB";
         private const FTPKey.ConnectionProtocol PROTOCOL = FTPKey.ConnectionProtocol.Ftp;
         private const FTPKey.EncryptionType ENCRYPTION = FTPKey.EncryptionType.None;
         private const string FINGERPRINT = "";
 
         // Test paths
-        private const string TEST_FILES_PATH = @"D:\Sviluppo\GIT\FTPKey\FTPKey.Test\TestFiles";
-        private const string ACTIVE_TEST_PATH = @"D:\Sviluppo\GIT\FTPKey\FTPKey.Test\ActiveTestFolder";
+        private const string TEST_FILES_PATH = @"E:\Develop\Samples\GIT\FTPKey\FTPKey.Test\TestFiles";
+        private const string ACTIVE_TEST_PATH = @"E:\Develop\Samples\GIT\FTPKey\FTPKey.Test\ActiveTestFolder";
 
         // Test Files
         private const string TEST_FILE_1 = "TestFile.txt";
         private const string TEST_FILE_2 = "Verbundmörtel Zubehör + Technische Daten DE.pdf";
         private const string TEST_FILE_3 = "TestFile2.txt";
+        private const string TEST_FILE_3_COPY = "TestFile2_Copy.txt";
         private const string TEST_FOLDER_1 = "TestSubFolder";
         private const string TEST_FOLDER_2 = @"TestSubFolder2\TestSubFolder3";
         private const string TEST_FOLDER_3 = @"TestSubFolder4";
@@ -245,9 +246,9 @@ namespace FTPKey.Test
         }
 
         [DataTestMethod]
-        [DataRow(false, TEST_FILE_1, false)]
-        [DataRow(true, TEST_FILE_1, false)]
-        [DataRow(true, TEST_FILE_1, true)]
+        [DataRow(false, TEST_FILE_2, false)]
+        [DataRow(true, TEST_FILE_2, false)]
+        [DataRow(true, TEST_FILE_2, true)]
         public void Test_AJ_DownloadFile_FileStream(bool connect, string fileName, bool deleteFileAfterDownload)
         {
             using (Client client = _GetClient(connect))
@@ -264,6 +265,65 @@ namespace FTPKey.Test
                         bool result = client.DownloadFile(fileName, stream, deleteFileAfterDownload);
                         Assert.IsTrue(result && (!deleteFileAfterDownload || (deleteFileAfterDownload && !client.FileExists(fileName))));
                     }
+                }
+                catch (System.Exception ex)
+                {
+                    Assert.IsTrue(!connect && ex is FTPKey.Exceptions.FtpClientIsDisconnectedException);
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(false, TEST_FILE_3, TEST_FILE_3_COPY)]
+        [DataRow(true, TEST_FILE_3, TEST_FILE_3_COPY)]
+        public void Test_AK_CopyFile(bool connect, string fileName, string destinationFileName)
+        {
+            using (Client client = _GetClient(connect))
+            {
+                try
+                {
+                    bool result = client.CopyFile(fileName, destinationFileName);
+                    Assert.IsTrue(result);
+                }
+                catch (System.Exception ex)
+                {
+                    Assert.IsTrue(!connect && ex is FTPKey.Exceptions.FtpClientIsDisconnectedException);
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(true, TEST_FOLDER_1, TEST_FILE_3, TEST_FOLDER_2, TEST_FILE_3_COPY)]
+        public void Test_AL_CopyFile_SubFolder(bool connect, string originFolder, string originFileName, string destinationFolder, string destinationFileName)
+        {
+            using (Client client = _GetClient(connect))
+            {
+                try
+                {
+                    client.SetCurrentFolder(originFolder);
+
+                    bool result = client.CopyFile(originFileName, Path.Combine("../", destinationFolder, destinationFileName));
+                    Assert.IsTrue(result);
+                }
+                catch (System.Exception ex)
+                {
+                    Assert.IsTrue(!connect && ex is FTPKey.Exceptions.FtpClientIsDisconnectedException);
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(true, TEST_FOLDER_1, TEST_FILE_3, TEST_FOLDER_3, TEST_FILE_3_COPY)]
+        public void Test_AM_MoveFile_SubFolder(bool connect, string originFolder, string originFileName, string destinationFolder, string destinationFileName)
+        {
+            using (Client client = _GetClient(connect))
+            {
+                try
+                {
+                    client.SetCurrentFolder(originFolder);
+
+                    bool result = client.MoveFile(originFileName, Path.Combine("../", destinationFolder, destinationFileName));
+                    Assert.IsTrue(result);
                 }
                 catch (System.Exception ex)
                 {
