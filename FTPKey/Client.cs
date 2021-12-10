@@ -102,7 +102,7 @@ namespace FTPKey
         /// <returns></returns>
         public void DeleteFiles(string fileNameSearchPattern)
         {
-            string[] files = GetFilesList();
+            List<string> files = GetFilesList();
 
             if (files != null)
             {
@@ -170,7 +170,7 @@ namespace FTPKey
             {
                 if (Directory.Exists(destinationPath))
                 {
-                    string[] files = GetFilesList(fileNameSearchPattern);
+                    List<string> files = GetFilesList(fileNameSearchPattern);
 
                     if (files != null)
                     {
@@ -228,7 +228,7 @@ namespace FTPKey
         /// <summary>
         /// Gets a list of filenames from the current remote folder
         /// </summary>
-        public string[] GetFilesList()
+        public List<string> GetFilesList()
         {
             if (IsConnected)
                 return _client.GetFilesList();
@@ -240,35 +240,27 @@ namespace FTPKey
         /// Gets a list of files from the desired path
         /// </summary>
         /// <param name="pattern">A research pattern to retrieve specific files; if empty, all files will be retrieved</param>
-        public string[] GetFilesList(string pattern)
+        public List<string> GetFilesList(string pattern)
         {
             if (IsConnected)
             {
-                string[] files = this.GetFilesList();
+                List<string> files = this.GetFilesList();
 
-                if (files != null)
+                if (!string.IsNullOrEmpty(pattern))
                 {
-                    if (!string.IsNullOrEmpty(pattern))
+                    string regExPattern = this._RegExPattern(pattern);
+                    List<string> filteredFiles = new List<string>();
+
+                    foreach (string file in files)
                     {
-                        string regExPattern = this._RegExPattern(pattern);
-                        List<string> filteredFiles = new List<string>();
-
-                        foreach (string file in files)
-                        {
-                            if (System.Text.RegularExpressions.Regex.IsMatch(file.ToUpper(), regExPattern))
-                                filteredFiles.Add(file);
-                        }
-
-                        if (filteredFiles.Count > 0)
-                            return filteredFiles.ToArray();
-                        else
-                            return null;
+                        if (System.Text.RegularExpressions.Regex.IsMatch(file.ToUpper(), regExPattern))
+                            filteredFiles.Add(file);
                     }
-                    else
-                        return files;
+
+                    return filteredFiles;
                 }
                 else
-                    return null;
+                    return files;
             }
             else
                 throw new FtpClientIsDisconnectedException(Messages.Messages.ClientDisconnected);

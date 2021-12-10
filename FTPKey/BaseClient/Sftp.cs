@@ -215,7 +215,7 @@ namespace FTPKey.BaseClient
         /// <summary>
         /// Gets a list of filenames from the current remote folder
         /// </summary>
-        public string[] GetFilesList()
+        public List<string> GetFilesList()
         {
             return GetFilesList(GetCurrentFolder());
         }
@@ -224,9 +224,9 @@ namespace FTPKey.BaseClient
         /// Gets a list of files from the desired path
         /// </summary>
         /// <param name="path">The path from witch retrieve the files list</param>
-        public string[] GetFilesList(string path)
+        public List<string> GetFilesList(string path)
         {
-            string[] files = null;
+            List<string> files = Enumerable.Empty<string>().ToList();
             List<Renci.SshNet.Sftp.SftpFile> sftpFiles = null;
 
             try
@@ -247,7 +247,7 @@ namespace FTPKey.BaseClient
             }
 
             if (sftpFiles.Count > 0)
-                files = (from file in sftpFiles where !file.IsDirectory select file.Name).ToArray();
+                files = (from file in sftpFiles where !file.IsDirectory select file.Name).ToList();
 
             return files;
         }

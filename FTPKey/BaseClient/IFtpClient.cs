@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace FTPKey.BaseClient
@@ -68,7 +69,7 @@ namespace FTPKey.BaseClient
         /// <summary>
         /// Gets a list of filenames from the current remote folder
         /// </summary>
-        string[] GetFilesList();
+        List<string> GetFilesList();
         
         /// <summary>
         /// Gets a list of sub-folders from the current remote folder
@@ -79,7 +80,7 @@ namespace FTPKey.BaseClient
         /// Gets a list of files from the desired path
         /// </summary>
         /// <param name="path">The path from witch retrieve the files list</param>
-        string[] GetFilesList(string path);
+        List<string> GetFilesList(string path);
         
         /// <summary>
         /// Gets a list of sub-folders from the desired path

@@ -331,6 +331,26 @@ namespace FTPKey.Test
                 }
             }
         }
+
+        [DataTestMethod]
+        [DataRow(true, TEST_FOLDER_2, "*.txt", false)]
+        [DataRow(true, TEST_FOLDER_1, "*.txt", true)]
+        public void Test_AN_GetFilesList(bool connect, string folder, string filePath, bool empty)
+        {
+            using (Client client = _GetClient(connect))
+            {
+                try
+                {
+                    client.SetCurrentFolder(folder);
+                    System.Collections.Generic.List<string> result = client.GetFilesList(filePath);
+                    Assert.IsTrue((result.Count > 0 && !empty) || (result.Count == 0 && empty));
+                }
+                catch (System.Exception ex)
+                {
+                    Assert.IsTrue(!connect && ex is FTPKey.Exceptions.FtpClientIsDisconnectedException);
+                }
+            }
+        }
         #endregion
     }
 }
